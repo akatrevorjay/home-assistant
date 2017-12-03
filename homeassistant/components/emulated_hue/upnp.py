@@ -12,6 +12,10 @@ from homeassistant.components.http import HomeAssistantView
 _LOGGER = logging.getLogger(__name__)
 
 
+BRIDGE_FRIENDLY_NAME_TEMPLATE = 'HASS Bridge ({c.advertise_ip})'
+# BRIDGE_FRIENDLY_NAME_TEMPLATE = 'Philips hue'
+
+
 class DescriptionXmlView(HomeAssistantView):
     """Handles requests for the description.xml file."""
 
@@ -32,10 +36,10 @@ class DescriptionXmlView(HomeAssistantView):
 <major>1</major>
 <minor>0</minor>
 </specVersion>
-<URLBase>http://{0}:{1}/</URLBase>
+<URLBase>http://{c.advertise_ip}:{c.advertise_port}/</URLBase>
 <device>
 <deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-<friendlyName>HASS Bridge ({0})</friendlyName>
+<friendlyName>{friendly_name}</friendlyName>
 <manufacturer>Royal Philips Electronics</manufacturer>
 <manufacturerURL>http://www.philips.com</manufacturerURL>
 <modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
@@ -48,10 +52,65 @@ class DescriptionXmlView(HomeAssistantView):
 </root>
 """
 
-        resp_text = xml_template.format(
-            self.config.advertise_ip, self.config.advertise_port)
+        friendly_name = BRIDGE_FRIENDLY_NAME_TEMPLATE.format(c=self.config)
+
+        resp_text = xml_template.format(c=self.config, friendly_name=friendly_name)
 
         return web.Response(text=resp_text, content_type='text/xml')
+
+
+class HueConfigView(HomeAssistantView):
+    """Handle requests to get the configuration for the emulated hue bridge."""
+
+    url = '/api/nouser/config'
+    name = 'api:nouser:config'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    def gen_config(self):
+        mac = '04:f0:21:24:28:28'
+
+        friendly_name = BRIDGE_FRIENDLY_NAME_TEMPLATE.format(c=self.config)
+
+        cfg = dict(
+            name=friendly_name,
+            mac=mac,
+            bridgeid=mac.upper().replace(':', ''),
+            modelid='BSB002',
+
+            swversion="81012917",
+            portalservice=False,
+            linkbutton=True,
+            dhcp=True,
+            ipaddress=self.config.advertise_ip,
+            netmask='255.255.255.0',
+            gateway='192.168.20.254',
+            apiversion="1.3.0",
+            # TODO: send this as "utc" and "localtime" as timezone corrected utc
+            # localtime=datetime.now(),
+            # TODO: take this from the settings, once we have spiffs support
+            timezone='America/Los_Angeles',
+            whitelist=dict(
+                api=dict(name='clientname#devicename'),
+            ),
+            swupdate=dict(
+                text='',
+                notify=False,  # Otherwise client app shows update notice
+                updatestate=0,
+                url='',
+            ),
+        )
+
+        return cfg
+
+    @core.callback
+    def get(self, request):
+        """Handle a GET request."""
+        config = self.gen_config()
+        return self.json(config)
 
 
 class UPNPResponderThread(threading.Thread):

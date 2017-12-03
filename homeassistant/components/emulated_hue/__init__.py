@@ -22,7 +22,7 @@ from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
     HueOneLightChangeView)
-from .upnp import DescriptionXmlView, UPNPResponderThread
+from .upnp import DescriptionXmlView, UPNPResponderThread, HueConfigView
 
 DOMAIN = 'emulated_hue'
 
@@ -90,6 +90,7 @@ def setup(hass, yaml_config):
     )
 
     server.register_view(DescriptionXmlView(config))
+    server.register_view(HueConfigView(config))
     server.register_view(HueUsernameView)
     server.register_view(HueAllLightsStateView(config))
     server.register_view(HueOneLightStateView(config))

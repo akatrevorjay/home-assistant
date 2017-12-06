@@ -31,7 +31,7 @@ HUE_API_STATE_ON = 'on'
 HUE_API_STATE_BRI = 'bri'
 
 
-class HueUsernameView(HomeAssistantView):
+class HueCreateUsernameView(HomeAssistantView):
     """Handle requests to create a username for the emulated hue bridge."""
 
     url = '/api'
@@ -51,7 +51,29 @@ class HueUsernameView(HomeAssistantView):
             return self.json_message('devicetype not specified',
                                      HTTP_BAD_REQUEST)
 
-        return self.json([{'success': {'username': '12345678901234567890'}}])
+        username = create_username()
+        return self.json([{'success': {'username': username}}])
+
+
+def create_username():
+    username = '12345678901234567890'
+    return username
+
+
+@asyncio.coroutine
+def get_all_lights_state(hass, config):
+    lights = {}
+
+    for entity in hass.states.async_all():
+        if not config.is_entity_exposed(entity):
+            continue
+
+        state, brightness = get_entity_state(config, entity)
+        number = config.entity_id_to_number(entity.entity_id)
+
+        lights[number] = entity_to_json(entity, state, brightness)
+
+    return lights
 
 
 class HueAllLightsStateView(HomeAssistantView):
@@ -65,21 +87,103 @@ class HueAllLightsStateView(HomeAssistantView):
         """Initialize the instance of the view."""
         self.config = config
 
-    @core.callback
+    @asyncio.coroutine
     def get(self, request, username):
         """Process a request to get the list of available lights."""
         hass = request.app['hass']
-        json_response = {}
 
-        for entity in hass.states.async_all():
-            if self.config.is_entity_exposed(entity):
-                state, brightness = get_entity_state(self.config, entity)
+        data = yield from get_all_lights_state(hass, self.config)
 
-                number = self.config.entity_id_to_number(entity.entity_id)
-                json_response[number] = entity_to_json(
-                    entity, state, brightness)
+        return self.json(data)
 
-        return self.json(json_response)
+
+BRIDGE_FRIENDLY_NAME_TEMPLATE = 'HASS Bridge ({c.advertise_ip})'
+# BRIDGE_FRIENDLY_NAME_TEMPLATE = 'Philips hue'
+
+
+def gen_config(config):
+    mac = '04:f0:21:24:28:28'
+
+    friendly_name = BRIDGE_FRIENDLY_NAME_TEMPLATE.format(c=config)
+
+    cfg = dict(
+        name=friendly_name,
+        mac=mac,
+        bridgeid=mac.upper().replace(':', ''),
+        modelid='BSB002',
+
+        # swversion="81012917",
+        swversion="91012917",
+        portalservices=False,
+        linkbutton=True,
+        dhcp=True,
+        ipaddress=config.advertise_ip,
+        netmask='255.255.255.0',
+        gateway='192.168.20.254',
+        apiversion="1.3.0",
+        # TODO: send this as "utc" and "localtime" as timezone corrected utc
+        # localtime=datetime.now(),
+        # TODO: take this from the settings, once we have spiffs support
+        timezone='America/Los_Angeles',
+        whitelist=dict(
+            api=dict(name='clientname#devicename'),
+        ),
+        swupdate=dict(
+            text='',
+            notify=False,  # Otherwise client app shows update notice
+            updatestate=0,
+            url='',
+        ),
+    )
+
+    return cfg
+
+
+class HueConfigView(HomeAssistantView):
+    """Handle requests to get the configuration for the emulated hue bridge."""
+
+    url = '/api/{username}/config'
+    name = 'api:username:config'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Handle a GET request."""
+        config = gen_config(self.config)
+        return self.json(config)
+
+
+class HueStateView(HomeAssistantView):
+    """Handle requests for getting and setting info about entities."""
+
+    url = '/api/{username}'
+    name = 'emulated_hue:state'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @asyncio.coroutine
+    def get(self, request, username):
+        """Process a request to get the list of available lights."""
+        hass = request.app['hass']
+
+        lights = yield from get_all_lights_state(hass, self.config)
+
+        data = {
+            'lights': lights,
+            'schedules': {},
+            'config': gen_config(self.config),
+            'groups': {},
+            'scenes': {},
+        }
+
+        return self.json(data)
 
 
 class HueOneLightStateView(HomeAssistantView):

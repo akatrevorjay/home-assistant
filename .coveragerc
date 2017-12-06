@@ -11,6 +11,9 @@ omit =
     homeassistant/components/abode.py
     homeassistant/components/*/abode.py
 
+    homeassistant/components/ads/__init__.py
+    homeassistant/components/*/ads.py
+
     homeassistant/components/alarmdecoder.py
     homeassistant/components/*/alarmdecoder.py
 
@@ -427,6 +430,7 @@ omit =
     homeassistant/components/media_player/volumio.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/media_player/yamaha_musiccast.py
+    homeassistant/components/media_player/ziggo_mediabox_xl.py
     homeassistant/components/mycroft.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
@@ -514,6 +518,7 @@ omit =
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
+    homeassistant/components/sensor/gearbest.py
     homeassistant/components/sensor/geizhals.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py

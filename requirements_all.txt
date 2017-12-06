@@ -291,6 +291,9 @@ gTTS-token==1.1.1
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
 
+# homeassistant.components.sensor.gearbest
+gearbest_parser==1.0.5
+
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.6
 
@@ -334,7 +337,7 @@ hipnotify==1.0.8
 holidays==0.8.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20171204.0
+home-assistant-frontend==20171206.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -600,6 +603,9 @@ pyTibber==0.2.1
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
+# homeassistant.components.ads
+pyads==2.2.6
+
 # homeassistant.components.sensor.airvisual
 pyairvisual==1.0.0
 
@@ -626,7 +632,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==1.0.2
+pychromecast==0.8.2
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -889,7 +895,7 @@ python-velbus==2.0.11
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.7.0
+python-wink==1.7.1
 
 # homeassistant.components.sensor.swiss_public_transport
 python_opendata_transport==0.0.3
@@ -1179,3 +1185,6 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.19.1
+
+# homeassistant.components.media_player.ziggo_mediabox_xl
+ziggo-mediabox-xl==1.0.0

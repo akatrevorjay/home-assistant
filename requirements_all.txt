@@ -72,7 +72,7 @@ aiohttp_cors==0.5.3
 aioimaplib==0.7.13
 
 # homeassistant.components.light.lifx
-aiolifx==0.6.0
+aiolifx==0.6.1
 
 # homeassistant.components.light.lifx
 aiolifx_effects==0.1.2
@@ -580,6 +580,9 @@ pushetta==1.0.15
 
 # homeassistant.components.light.rpi_gpio_pwm
 pwmled==1.2.1
+
+# homeassistant.components.canary
+py-canary==0.2.3
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==3.3.0

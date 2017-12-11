@@ -146,8 +146,9 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
 
-    if entity.domain == climate.DOMAIN:
-        if entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) == climate.DOMAIN:
+    google_entity = {'domain': entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE)}
+    if entity.domain == sensor.DOMAIN:
+        if google_entity.domain == climate.DOMAIN:
             # check if we have a string value to convert it to number
             value = entity.state
             if isinstance(entity.state, str):
@@ -161,28 +162,35 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
                 if units.temperature_unit in [TEMP_FAHRENHEIT, TEMP_CELSIUS]:
                     value = celsius(value)
                     attr = 'thermostatTemperatureAmbient'
-                else:
+                elif units.temperature_unit == '%':
                     attr = 'thermostatHumidityAmbient'
+                else:
+                    _LOGGER.warning(
+                        "Unit %s cannot be treated as a climate sensor",
+                        units.temperature_unit
+                    )
 
                 return {attr: value}
-        else:
-            mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
-            if mode not in CLIMATE_SUPPORTED_MODES:
-                mode = 'on'
-            response = {
-                'thermostatMode': mode,
-                'thermostatTemperatureSetpoint':
+
+    if entity.domain == climate.DOMAIN:
+        mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
+        if mode not in CLIMATE_SUPPORTED_MODES:
+            mode = 'on'
+        response = {
+            'thermostatMode': mode,
+            'thermostatTemperatureSetpoint':
                 celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
-                'thermostatTemperatureAmbient':
+            'thermostatTemperatureAmbient':
                 celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
-                'thermostatTemperatureSetpointHigh':
+            'thermostatTemperatureSetpointHigh':
                 celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
-                'thermostatTemperatureSetpointLow':
+            'thermostatTemperatureSetpointLow':
                 celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
-                'thermostatHumidityAmbient':
+            'thermostatHumidityAmbient':
                 entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
-            }
-            return {k: v for k, v in response.items() if v is not None}
+        }
+
+        return {k: v for k, v in response.items() if v is not None}
 
     final_state = entity.state != STATE_OFF
     final_brightness = entity.attributes.get(light.ATTR_BRIGHTNESS, 255

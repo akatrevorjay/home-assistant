@@ -147,10 +147,8 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
 
     if entity.domain == sensor.DOMAIN:
-        google_entity = {
-            'domain': entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE)
-        }
-        if google_entity.domain == climate.DOMAIN:
+        google_domain = entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE)
+        if google_domain == climate.DOMAIN:
             # check if we have a string value to convert it to number
             value = entity.state
             if isinstance(entity.state, str):

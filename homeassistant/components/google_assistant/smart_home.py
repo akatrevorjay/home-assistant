@@ -179,15 +179,15 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
         response = {
             'thermostatMode': mode,
             'thermostatTemperatureSetpoint':
-                celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
+            celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
             'thermostatTemperatureAmbient':
-                celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
+            celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
             'thermostatTemperatureSetpointHigh':
-                celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
+            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
             'thermostatTemperatureSetpointLow':
-                celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
+            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
             'thermostatHumidityAmbient':
-                entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
+            entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
         }
 
         return {k: v for k, v in response.items() if v is not None}

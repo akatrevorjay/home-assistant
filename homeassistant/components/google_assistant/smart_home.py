@@ -18,7 +18,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene, script, climate
+    switch, light, cover, media_player, group, fan, scene, script, climate,
+    sensor
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -144,24 +145,44 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
         if deg is None:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+
     if entity.domain == climate.DOMAIN:
-        mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
-        if mode not in CLIMATE_SUPPORTED_MODES:
-            mode = 'on'
-        response = {
-            'thermostatMode': mode,
-            'thermostatTemperatureSetpoint':
-            celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
-            'thermostatTemperatureAmbient':
-            celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
-            'thermostatTemperatureSetpointHigh':
-            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
-            'thermostatTemperatureSetpointLow':
-            celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
-            'thermostatHumidityAmbient':
-            entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
-        }
-        return {k: v for k, v in response.items() if v is not None}
+        if entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE) == climate.DOMAIN:
+            # check if we have a string value to convert it to number
+            value = entity.state
+            if isinstance(entity.state, str):
+                try:
+                    value = float(value)
+                except ValueError:
+                    value = None
+
+            if value is not None:
+                # detect if we report temperature or humidity
+                if units.temperature_unit in [TEMP_FAHRENHEIT, TEMP_CELSIUS]:
+                    value = celsius(value)
+                    attr = 'thermostatTemperatureAmbient'
+                else:
+                    attr = 'thermostatHumidityAmbient'
+
+                return {attr: value}
+        else:
+            mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
+            if mode not in CLIMATE_SUPPORTED_MODES:
+                mode = 'on'
+            response = {
+                'thermostatMode': mode,
+                'thermostatTemperatureSetpoint':
+                celsius(entity.attributes.get(climate.ATTR_TEMPERATURE)),
+                'thermostatTemperatureAmbient':
+                celsius(entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)),
+                'thermostatTemperatureSetpointHigh':
+                celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)),
+                'thermostatTemperatureSetpointLow':
+                celsius(entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)),
+                'thermostatHumidityAmbient':
+                entity.attributes.get(climate.ATTR_CURRENT_HUMIDITY),
+            }
+            return {k: v for k, v in response.items() if v is not None}
 
     final_state = entity.state != STATE_OFF
     final_brightness = entity.attributes.get(light.ATTR_BRIGHTNESS, 255

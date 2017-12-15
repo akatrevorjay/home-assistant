@@ -18,7 +18,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene, script, climate
+    switch, light, cover, media_player, group, fan, scene, script, climate,
+    sensor
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -144,6 +145,33 @@ def query_device(entity: Entity, units: UnitSystem) -> dict:
         if deg is None:
             return None
         return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
+
+    if entity.domain == sensor.DOMAIN:
+        google_domain = entity.attributes.get(ATTR_GOOGLE_ASSISTANT_TYPE)
+        if google_domain == climate.DOMAIN:
+            # check if we have a string value to convert it to number
+            value = entity.state
+            if isinstance(entity.state, str):
+                try:
+                    value = float(value)
+                except ValueError:
+                    value = None
+
+            if value is not None:
+                # detect if we report temperature or humidity
+                if units.temperature_unit in [TEMP_FAHRENHEIT, TEMP_CELSIUS]:
+                    value = celsius(value)
+                    attr = 'thermostatTemperatureAmbient'
+                elif units.temperature_unit == '%':
+                    attr = 'thermostatHumidityAmbient'
+                else:
+                    _LOGGER.warning(
+                        "Unit %s cannot be treated as a climate sensor",
+                        units.temperature_unit
+                    )
+
+                return {attr: value}
+
     if entity.domain == climate.DOMAIN:
         mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
         if mode not in CLIMATE_SUPPORTED_MODES:

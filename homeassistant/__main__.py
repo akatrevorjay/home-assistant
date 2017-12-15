@@ -1,6 +1,12 @@
 """Start Home Assistant."""
 from __future__ import print_function
 
+from . import lazy_import, lazy_regex
+lazy_regex.install_lazy_compile()
+
+# import demandimport
+# demandimport.enable()
+
 import argparse
 import os
 import platform

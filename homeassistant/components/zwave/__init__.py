@@ -9,7 +9,8 @@ import copy
 import logging
 import os.path
 import time
-from pprint import pprint
+# from pprint import pprint
+from pytutils.pretty import pprint
 
 import voluptuous as vol
 
@@ -35,7 +36,8 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import check_node_schema, check_value_schema, node_name
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.35']
+# REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.35']
+REQUIREMENTS = []
 
 _LOGGER = logging.getLogger(__name__)
 

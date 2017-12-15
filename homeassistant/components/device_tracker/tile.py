@@ -71,10 +71,12 @@ class TileDeviceScanner(DeviceScanner):
                 config[CONF_USERNAME],
                 config[CONF_PASSWORD])
 
-            if not save_json(
+            try:
+                save_json(
                     hass.config.path(CLIENT_UUID_CONFIG_FILE),
                     {'client_uuid': self._client.client_uuid}):
-                _LOGGER.error("Failed to save configuration file")
+            except Exception:
+                _LOGGER.exception("Failed to save configuration file (save_json failed; exception below.)")
 
         _LOGGER.debug('Client UUID: %s', self._client.client_uuid)
         _LOGGER.debug('User UUID: %s', self._client.user_uuid)

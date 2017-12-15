@@ -2,49 +2,44 @@
 import logging
 from typing import Union, List, Dict
 
+import os
+import six
 import json
-
-from homeassistant.exceptions import HomeAssistantError
+import tempfile
+import io
+import codecs
+import functools
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def load_json(filename: str) -> Union[List, Dict]:
+def load_json(filename: str, **kwargs) -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
     Defaults to returning empty dict if file is not found.
     """
     try:
-        with open(filename, encoding='utf-8') as fdesc:
-            return json.loads(fdesc.read())
+        with open(filename, 'r') as fh:
+            data = json.load(fh, **kwargs)
+    # This is not a fatal error
     except FileNotFoundError:
-        # This is not a fatal error
-        _LOGGER.debug('JSON file not found: %s', filename)
-    except ValueError as error:
-        _LOGGER.exception('Could not parse JSON content: %s', filename)
-        raise HomeAssistantError(error)
-    except OSError as error:
-        _LOGGER.exception('JSON file reading failed: %s', filename)
-        raise HomeAssistantError(error)
-    return {}  # (also evaluates to False)
+        _LOGGER.debug('File not found: %r; Pretending it just contained an empty mapping I guess.' % filename)
+        data = {}
+
+    return data
 
 
-def save_json(filename: str, config: Union[List, Dict]):
+def save_json(filename: str, data: Union[List, Dict], sort_keys: bool=True, indent: int=4, **kwargs) -> int:
     """Save JSON data to a file.
 
-    Returns True on success.
+    Just like `write()` returns the number of bytes written.
     """
-    try:
-        data = json.dumps(config, sort_keys=True, indent=4)
-        with open(filename, 'w', encoding='utf-8') as fdesc:
-            fdesc.write(data)
-            return True
-    except TypeError as error:
-        _LOGGER.exception('Failed to serialize to JSON: %s',
-                          filename)
-        raise HomeAssistantError(error)
-    except OSError as error:
-        _LOGGER.exception('Saving JSON file failed: %s',
-                          filename)
-        raise HomeAssistantError(error)
-    return False
+    json_data = json.dumps(data, sort_keys=sort_keys, indent=indent, **kwargs)
+
+    with open(filename, 'w+') as fh:
+        fh.seek(0)
+        cnt = fh.write(json_data)
+        fh.truncate()
+
+    return cnt
+
